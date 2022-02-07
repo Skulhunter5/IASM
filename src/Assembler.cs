@@ -124,13 +124,19 @@ namespace IASM {
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
                         // REX.W + 89 /r
-                        Append((byte) 0b01001000);
+                        // - REX.W
+                        Append(Constants.REXW);
+                        // - opcode
                         Append((byte) 0x89);
-                        Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
+                        // - ModR/M
+                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[2].Text) << 3) + Constants.GetRegisterIdentifier(tokens[1].Text)));
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + B8+rd io
-                        Append((byte) 0b01001000);
-                        Append((byte) (0xB8 + Utils.GetRegisterIdentifier(tokens[1].Text)));
+                        // - REX.W
+                        Append(Constants.REXW);
+                        // - opcode+rd
+                        Append((byte) (0xB8 + Constants.GetRegisterIdentifier(tokens[1].Text))); // 
+                        // - imm64
                         Append(ulong.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
@@ -147,37 +153,48 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        // REX.W + 3B /r
-                        Append((byte) 0b01001000);
+                        // REX.W + 3B /r :: CMP r64, r/m64
+                        // - REX.W
+                        Append(Constants.REXW);
+                        // - opcode
                         Append((byte) 0x3B);
-                        Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
+                        // - ModR/M
+                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[1].Text) << 3) + Constants.GetRegisterIdentifier(tokens[2].Text)));
+                    } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
+                        // FIXME
+                        /* // REX.W + 81 /7 id
+                        Append(Constants.REXW);
+                        Append((byte) 0x81);
+                        Append((byte) (0b11000000 + Utils.GetRegisterIdentifier(tokens[1].Text)));
+                        Append(int.Parse(tokens[2].Text)); */
+                        throw new NotImplementedException();
                     } else throw new NotImplementedException();
 
-                } else if(tokens[0].Text == "je") {
+                } else if(Utils.JccRegex.IsMatch(tokens[0].Text)) {
                     if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
                     if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
 
                     // TODO: add placeholder and decide which jump type (close, near, maybe even far) to use later when the actual distance to jump is known
 
+                    // 0F cc:code cd :: Jcc rel32
+                    // - opcode
                     Append((byte) 0x0f);
-                    Append((byte) 0x84);
+                    // - cc:code
+                    string cc = tokens[0].Text.Substring(1, tokens[0].Text.Length-1);
+                    Append((byte) (Constants.JccBaseOpcode + Constants.ccOffset(cc)));
+                    // cd :: rel32
                     fillLabelContracts.Add(new FillLabelContract(_bytes.Count, tokens[1].Text, -_bytes.Count - 4));
                     Append((int) 0);
 
-                    /* // JE rel8
-                    byte tmp = (byte) _bytes.Count;
-                    Append((byte) 0x74);
-                    Console.WriteLine((sbyte) (labels.GetValueOrDefault(tokens[1].Text) - tmp - 2));
-                    Append((sbyte) (labels.GetValueOrDefault(tokens[1].Text) - tmp - 2)); */
                 } else if(tokens[0].Text == "xor") {
                     if(tokens.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        // REX.W + 33 /r
-                        Append((byte) 0b01001000);
+                        // REX.W + 33 /r :: XOR 
+                        Append(Constants.REXW);
                         Append((byte) 0x33);
-                        Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
+                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[1].Text) << 3) + Constants.GetRegisterIdentifier(tokens[2].Text)));
                     } else throw new NotImplementedException();
 
                 } else throw new NotImplementedException();
@@ -191,6 +208,8 @@ namespace IASM {
                 }
                 Replace(contract.Position, value + contract.Offset);
             }
+
+            //for(int i = 0; i < _bytes.Count; i++) Console.WriteLine(i + ": " + _bytes[i]);
 
             // HEADERS
 

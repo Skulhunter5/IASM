@@ -31,17 +31,7 @@ namespace IASM {
         public static readonly Regex numberRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
         public static readonly Regex registerRegex = new Regex("^([re][abcd]x|[abcd][xhb]|[re](bp|sp|si|di))$", RegexOptions.Compiled); // TODO: improve to contain actually every register
 
-        public static int GetRegisterIdentifier(string text) {
-            if(text.Contains("bp")) return 0b101;
-            else if(text.Contains("sp")) return 0b101;
-            else if(text.Contains("si")) return 0b110;
-            else if(text.Contains("di")) return 0b101;
-            else if(text.Contains("a")) return 0b000;
-            else if(text.Contains("c")) return 0b001;
-            else if(text.Contains("d")) return 0b010;
-            else if(text.Contains("b")) return 0b011;
-            else throw new NotImplementedException();
-        }
+        public static readonly Regex JccRegex = new Regex("^(jn?([abglczsop]|[abgl]?e)|jp[eo]?)$", RegexOptions.Compiled);
 
         public static string[] GetLines(string text) {
             List<string> lines = new List<string>();
