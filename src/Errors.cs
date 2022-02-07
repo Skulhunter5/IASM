@@ -11,14 +11,14 @@ namespace IASM {
     // General errors
 
     sealed class UnexpectedInstructionError : GeneralError {
-        public UnexpectedInstructionError(Word word) : base() {
-            Word = word;
+        public UnexpectedInstructionError(Token token) : base() {
+            Token = token;
         }
 
-        public Word Word { get; }
+        public Token Token { get; }
 
         public override string ToString() {
-            return base.ToString() + "Unexpected instruction: " + Word;
+            return base.ToString() + "Unexpected instruction: " + Token;
         }
     }
 

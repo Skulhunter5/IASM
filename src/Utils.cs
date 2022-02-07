@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace IASM {
 
@@ -26,6 +28,30 @@ namespace IASM {
 
     static class Utils {
 
+        public static readonly Regex numberRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
+        public static readonly Regex registerRegex = new Regex("^([re][abcd]x|[abcd][xhb]|[re](bp|sp|si|di)|r([89]|1[0-5])[dwb]?)$", RegexOptions.Compiled); // TODO: improve to contain actually every register
+
+        public static readonly Regex register_rax_Regex = new Regex("^([re]ax|a[xhb])$");
+        public static readonly Regex register_rbx_Regex = new Regex("^([re]bx|b[xhb])$");
+        public static readonly Regex register_rcx_Regex = new Regex("^([re]cx|c[xhb])$");
+        public static readonly Regex register_rdx_Regex = new Regex("^([re]dx|d[xhb])$");
+        public static readonly Regex register_rsp_Regex = new Regex("^([re]sp)$");
+        public static readonly Regex register_rbp_Regex = new Regex("^([re]bp)$");
+        public static readonly Regex register_rsi_Regex = new Regex("^([re]si)$");
+        public static readonly Regex register_rdi_Regex = new Regex("^([re]di)$");
+
+        public static int GetRegisterIdentifier(string text) {
+            if(register_rax_Regex.IsMatch(text)) return 0b000;
+            else if(register_rcx_Regex.IsMatch(text)) return 0b001;
+            else if(register_rdx_Regex.IsMatch(text)) return 0b010;
+            else if(register_rbx_Regex.IsMatch(text)) return 0b011;
+            else if(register_rsp_Regex.IsMatch(text)) return 0b100;
+            else if(register_rbp_Regex.IsMatch(text)) return 0b101;
+            else if(register_rsi_Regex.IsMatch(text)) return 0b110;
+            else if(register_rdi_Regex.IsMatch(text)) return 0b111;
+            else throw new NotImplementedException(); // Unreachable
+        }
+
         public static string[] GetLines(string text) {
             List<string> lines = new List<string>();
             string line = "";
@@ -40,27 +66,6 @@ namespace IASM {
             return lines.ToArray();
         }
 
-    }
-
-    class Word {
-        public Word(Position position, string text) {
-            Position = position;
-            Text = text;
-            ExpandedFrom = null;
-            IncludedFrom = null;
-        }
-
-        public override string ToString()
-        {
-            if(ExpandedFrom != null) return "'" + Text + "' (expanded from " + ExpandedFrom + ")";
-            if(IncludedFrom != null) return "'" + Text + "' (Included from " + IncludedFrom[0] + " at " + IncludedFrom[1] + ")";
-            return "'" + Text + "' at " + Position;
-        }
-
-        public Position Position { get; }
-        public string Text { get; }
-        public Word ExpandedFrom { get; set; }
-        public Position[] IncludedFrom { get; set; }
     }
 
 }

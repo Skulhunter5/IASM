@@ -5,6 +5,7 @@ using System.Buffers.Binary;
 namespace IASM {
 
     class AssembleResult : Result {
+
         public AssembleResult(byte[] bytes, int headersSize, int codeSize, int dataSize, Error error) : base(error) {
             Bytes = bytes;
             HeadersSize = headersSize;
@@ -16,9 +17,11 @@ namespace IASM {
         public int HeadersSize { get; }
         public int CodeSize { get; }
         public int DataSize { get; }
+
     }
 
     class FillLabelContract {
+
         public FillLabelContract(int position, string label, int offset) {
             Position = position;
             Label = label;
@@ -28,6 +31,7 @@ namespace IASM {
         public int Position { get; }
         public string Label { get; }
         public int Offset { get; }
+
     }
 
     class IASMAssembler {
@@ -133,20 +137,14 @@ namespace IASM {
 
                 if(words[0].Text == "mov") {
                     if(words.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
-                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
+                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[3]));
 
                     if(words[1].TokenType == TokenType.Register && words[2].TokenType == TokenType.Register) {
                         throw new NotImplementedException();
                     } else if(words[1].TokenType == TokenType.Register && words[2].TokenType == TokenType.Number) {
-                        if(words[1].Text == "rax") {
-                            Append((byte) 0b01001000);
-                            Append((byte) 0xB8);
-                            Append(ulong.Parse(words[2].Text));
-                        } else if(words[1].Text == "rdi") {
-                            Append((byte) 0b01001000);
-                            Append((byte) (0xB8 + 7));
-                            Append(ulong.Parse(words[2].Text));
-                        } else throw new NotImplementedException();
+                        Append((byte) 0b01001000);
+                        Append((byte) (0xB8 + Utils.GetRegisterIdentifier(words[1].Text)));
+                        Append(ulong.Parse(words[2].Text));
                     } else throw new NotImplementedException();
 
                 } else if(words[0].Text == "syscall") {
@@ -158,7 +156,7 @@ namespace IASM {
                     labels.Add(words[0].Text.Substring(0, words[0].Text.Length-1), _bytes.Count);
                 } else if(words[0].Text == "cmp") {
                     if(words.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
-                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
+                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[3]));
 
                     if(words[1].Text == "rax" && words[2].Text == "rdi") {
                         Append((byte) 0b01001000);
@@ -169,7 +167,7 @@ namespace IASM {
                     if(words.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
                     if(words.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
                     
-                    // TODO: add placeholder and decide which jump type (close, near, maybe even add far) to use
+                    // TODO: add placeholder and decide which jump type (close, near, maybe even add far) to use later when I know how far to actually jump
 
                     Append((byte) 0x0f);
                     Append((byte) 0x84);
@@ -183,7 +181,7 @@ namespace IASM {
                     Append((sbyte) (labels.GetValueOrDefault(words[1].Text) - tmp - 2)); */
                 } else if(words[0].Text == "xor") {
                     if(words.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
-                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
+                    if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[3]));
 
                     if(words[1].Text == "rax" && words[2].Text == "rax") {
                         Append((byte) 0x48);
