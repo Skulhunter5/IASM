@@ -127,33 +127,28 @@ namespace IASM {
             string[] lines = Utils.GetLines(_text);
             for(int i = 0; i < lines.Length; i++) {
                 string line = lines[i];
-                Word[] words = new Lexer(line, _source, i+1).GetWords();
+                Token[] words = new Lexer(line, _source, i+1).run();
 
                 if(words.Length == 0) continue;
 
-                if(words[0].Text == "push") {
-                    if(words.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
-                    if(words.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
-
-                    if(!uint.TryParse(words[1].Text, out uint value)) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[1]));
-                    
-                    // PUSH imm32
-                    // 68 id
-                    Append((byte) 0x68);
-                    Append(value);
-                } else if(words[0].Text == "mov") {
+                if(words[0].Text == "mov") {
                     if(words.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
                     if(words.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[2]));
 
-                    if(words[1].Text == "rax") {
-                        Append((byte) 0b01001000);
-                        Append((byte) 0xB8);
-                        Append(ulong.Parse(words[2].Text));
-                    } else if(words[1].Text == "rdi") {
-                        Append((byte) 0b01001000);
-                        Append((byte) (0xB8 + 7));
-                        Append(ulong.Parse(words[2].Text));
+                    if(words[1].TokenType == TokenType.Register && words[2].TokenType == TokenType.Register) {
+                        throw new NotImplementedException();
+                    } else if(words[1].TokenType == TokenType.Register && words[2].TokenType == TokenType.Number) {
+                        if(words[1].Text == "rax") {
+                            Append((byte) 0b01001000);
+                            Append((byte) 0xB8);
+                            Append(ulong.Parse(words[2].Text));
+                        } else if(words[1].Text == "rdi") {
+                            Append((byte) 0b01001000);
+                            Append((byte) (0xB8 + 7));
+                            Append(ulong.Parse(words[2].Text));
+                        } else throw new NotImplementedException();
                     } else throw new NotImplementedException();
+
                 } else if(words[0].Text == "syscall") {
                     if(words.Length > 1) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(words[1]));
 
