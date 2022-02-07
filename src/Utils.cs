@@ -31,14 +31,14 @@ namespace IASM {
         public static readonly Regex numberRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
         public static readonly Regex registerRegex = new Regex("^([re][abcd]x|[abcd][xhb]|[re](bp|sp|si|di)|r([89]|1[0-5])[dwb]?)$", RegexOptions.Compiled); // TODO: improve to contain actually every register
 
-        public static readonly Regex register_rax_Regex = new Regex("^([re]ax|a[xhb])$");
-        public static readonly Regex register_rbx_Regex = new Regex("^([re]bx|b[xhb])$");
-        public static readonly Regex register_rcx_Regex = new Regex("^([re]cx|c[xhb])$");
-        public static readonly Regex register_rdx_Regex = new Regex("^([re]dx|d[xhb])$");
-        public static readonly Regex register_rsp_Regex = new Regex("^([re]sp)$");
-        public static readonly Regex register_rbp_Regex = new Regex("^([re]bp)$");
-        public static readonly Regex register_rsi_Regex = new Regex("^([re]si)$");
-        public static readonly Regex register_rdi_Regex = new Regex("^([re]di)$");
+        public static readonly Regex register_rax_Regex = new Regex("^([re]ax|a[xhb])$", RegexOptions.Compiled);
+        public static readonly Regex register_rbx_Regex = new Regex("^([re]bx|b[xhb])$", RegexOptions.Compiled);
+        public static readonly Regex register_rcx_Regex = new Regex("^([re]cx|c[xhb])$", RegexOptions.Compiled);
+        public static readonly Regex register_rdx_Regex = new Regex("^([re]dx|d[xhb])$", RegexOptions.Compiled);
+        public static readonly Regex register_rsp_Regex = new Regex("^([re]sp)$", RegexOptions.Compiled);
+        public static readonly Regex register_rbp_Regex = new Regex("^([re]bp)$", RegexOptions.Compiled);
+        public static readonly Regex register_rsi_Regex = new Regex("^([re]si)$", RegexOptions.Compiled);
+        public static readonly Regex register_rdi_Regex = new Regex("^([re]di)$", RegexOptions.Compiled);
 
         public static int GetRegisterIdentifier(string text) {
             if(register_rax_Regex.IsMatch(text)) return 0b000;
