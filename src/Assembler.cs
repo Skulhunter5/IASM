@@ -123,8 +123,12 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        throw new NotImplementedException();
+                        // REX.W + 89 /r
+                        Append((byte) 0b01001000);
+                        Append((byte) 0x89);
+                        Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
+                        // REX.W + B8+rd io
                         Append((byte) 0b01001000);
                         Append((byte) (0xB8 + Utils.GetRegisterIdentifier(tokens[1].Text)));
                         Append(ulong.Parse(tokens[2].Text));
@@ -133,6 +137,7 @@ namespace IASM {
                 } else if(tokens[0].Text == "syscall") {
                     if(tokens.Length > 1) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[1]));
 
+                    // 0F 05
                     Append((byte) 0x0f);
                     Append((byte) 0x05);
                 } else if(tokens[0].Text.EndsWith(":")) {
@@ -142,21 +147,23 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
+                        // REX.W + 3B /r
                         Append((byte) 0b01001000);
                         Append((byte) 0x3B);
                         Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
                     } else throw new NotImplementedException();
+
                 } else if(tokens[0].Text == "je") {
                     if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
                     if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
-                    
-                    // TODO: add placeholder and decide which jump type (close, near, maybe even add far) to use later when I know how far to actually jump
+
+                    // TODO: add placeholder and decide which jump type (close, near, maybe even far) to use later when the actual distance to jump is known
 
                     Append((byte) 0x0f);
                     Append((byte) 0x84);
                     fillLabelContracts.Add(new FillLabelContract(_bytes.Count, tokens[1].Text, -_bytes.Count - 4));
                     Append((int) 0);
-                    
+
                     /* // JE rel8
                     byte tmp = (byte) _bytes.Count;
                     Append((byte) 0x74);
@@ -167,10 +174,12 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        Append((byte) 0x48);
+                        // REX.W + 33 /r
+                        Append((byte) 0b01001000);
                         Append((byte) 0x33);
                         Append((byte) (0b11000000 + (Utils.GetRegisterIdentifier(tokens[1].Text) << 3) + Utils.GetRegisterIdentifier(tokens[2].Text)));
                     } else throw new NotImplementedException();
+
                 } else throw new NotImplementedException();
 
             }
