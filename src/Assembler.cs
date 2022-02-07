@@ -105,23 +105,6 @@ namespace IASM {
             _bytes[pos+3] = (byte) (value >> 24);
         }
 
-        public static byte[] asmCode = new byte[] {
-            0xb8, 0x01, 0x00, 0x00, 0x00, // mov rax, 1 (syscall: write)
-            0xbf, 0x01, 0x00, 0x00, 0x00, // mov rdi, 1 (stdout)
-            0x48, 0x8d, 0x35, 0x10, 0x0, 0x0, 0x0, // lea rsi, [rel helloStr]
-            0xba, 0x10, 0x00, 0x00, 0x00, // mov rex, sizeof(helloStr)
-            0x0f, 0x05, // syscall
-            0xb8, 0x3c, 0x00, 0x00, 0x00, // mov eax, 3c
-            0x48, 0x31, 0xff, // xor rdi, rdi
-            0x0f, 0x05 // syscall
-        };
-
-        public static byte[] asmCode2 = new byte[] {
-            0x48, 0xb8, 0x3c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rax, 60
-            0x48, 0xbf, 0x45, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // mov rdi, 60
-            0x0f, 0x05 // syscall
-        };
-
         public AssembleResult run() {
             _bytes = new List<byte>();
 
@@ -203,8 +186,8 @@ namespace IASM {
                 }
                 Replace(contract.Position, value + contract.Offset);
             }
-            
-            //_bytes.AddRange(asmCode2);
+
+            // HEADERS
 
             ulong size_Elf64Header = 64;
             byte[] header = new byte[size_Elf64Header];
