@@ -111,6 +111,13 @@ namespace IASM {
             Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(regA) << 3) + Constants.GetRegisterIdentifier(regB)));
         }
 
+        private void r64_imm32SE__digit(byte opcode, byte digit, string reg, int imm32) {
+            Append(Constants.REXW);
+            Append(opcode);
+            Append((byte) (0b11000000 + (digit << 3) + Constants.GetRegisterIdentifier(reg)));
+            Append(imm32);
+        }
+
         public AssembleResult run() {
             _bytes = new List<byte>();
 
@@ -158,14 +165,7 @@ namespace IASM {
                         r64_rm64(0x3B, tokens[1].Text, tokens[2].Text);
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + 81 /7 id :: CMP r/m64, imm32(se)
-                        // - REX.W
-                        Append(Constants.REXW);
-                        // - opcode
-                        Append((byte) 0x81);
-                        // - ModR/M /7
-                        Append((byte) (0b11111000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
-                        // - imm32
-                        Append(int.Parse(tokens[2].Text));
+                        r64_imm32SE__digit(0x81, 0b111, tokens[1].Text, int.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
                 } else if(Utils.JccRegex.IsMatch(tokens[0].Text)) {
@@ -202,14 +202,7 @@ namespace IASM {
                         r64_rm64(0x03, tokens[1].Text, tokens[2].Text);
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + 81 /0 id :: ADD r/m64, imm32(se)
-                        // - REX.W
-                        Append(Constants.REXW);
-                        // - opcode
-                        Append((byte) 0x81);
-                        // - ModR/M /0
-                        Append((byte) (0b11000000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
-                        // - imm32
-                        Append(int.Parse(tokens[2].Text));
+                        r64_imm32SE__digit(0x81, 0b000, tokens[1].Text, int.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
                 } else if(tokens[0].Text == "sub") {
@@ -221,14 +214,7 @@ namespace IASM {
                         r64_rm64(0x2B, tokens[1].Text, tokens[2].Text);
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + 81 /0 id :: ADD r/m64, imm32(se)
-                        // - REX.W
-                        Append(Constants.REXW);
-                        // - opcode
-                        Append((byte) 0x81);
-                        // - ModR/M /5
-                        Append((byte) (0b11101000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
-                        // - imm32
-                        Append(int.Parse(tokens[2].Text));
+                        r64_imm32SE__digit(0x81, 0b101, tokens[1].Text, int.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
                 } else throw new NotImplementedException();
