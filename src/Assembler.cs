@@ -118,6 +118,12 @@ namespace IASM {
             Append(imm32);
         }
 
+        private void rm64__digit(byte opcode, byte digit, string reg) {
+            Append(Constants.REXW);
+            Append(opcode);
+            Append((byte) (0b11000000 + (digit << 3) + Constants.GetRegisterCode(reg)));
+        }
+
         public AssembleResult run() {
             _bytes = new List<byte>();
 
@@ -237,6 +243,24 @@ namespace IASM {
                     if(tokens[1].TokenType == TokenType.Register) {
                         // 58+rd
                         Append((byte) (0x58 + Constants.GetRegisterCode(tokens[1].Text)));
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "inc") {
+                    if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
+                    
+                    if(tokens[1].TokenType == TokenType.Register) {
+                        // REX.W + FF /0 :: INC r/m64
+                        rm64__digit(0xFF, 0b000, tokens[1].Text);
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "dec") {
+                    if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
+                    
+                    if(tokens[1].TokenType == TokenType.Register) {
+                        // REX.W + FF /1 :: DEC r/m64
+                        rm64__digit(0xFF, 0b001, tokens[1].Text);
                     } else throw new NotImplementedException();
 
                 } else throw new NotImplementedException();
