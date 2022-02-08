@@ -105,6 +105,12 @@ namespace IASM {
             _bytes[pos+3] = (byte) (value >> 24);
         }
 
+        private void r64_rm64(byte opcode, string regA, string regB) { // TODO: check if it is always encoded like this or if I have to create the functions through how they are actually done (likely)
+            Append(Constants.REXW);
+            Append(opcode);
+            Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(regA) << 3) + Constants.GetRegisterIdentifier(regB)));
+        }
+
         public AssembleResult run() {
             _bytes = new List<byte>();
 
@@ -123,19 +129,14 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        // REX.W + 89 /r
-                        // - REX.W
-                        Append(Constants.REXW);
-                        // - opcode
-                        Append((byte) 0x89);
-                        // - ModR/M
-                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[2].Text) << 3) + Constants.GetRegisterIdentifier(tokens[1].Text)));
+                        // REX.W + 8B /r
+                        r64_rm64(0x8B, tokens[1].Text, tokens[2].Text);
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + B8+rd io
                         // - REX.W
                         Append(Constants.REXW);
                         // - opcode+rd
-                        Append((byte) (0xB8 + Constants.GetRegisterIdentifier(tokens[1].Text))); // 
+                        Append((byte) (0xB8 + Constants.GetRegisterIdentifier(tokens[1].Text)));
                         // - imm64
                         Append(ulong.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
@@ -154,20 +155,17 @@ namespace IASM {
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
                         // REX.W + 3B /r :: CMP r64, r/m64
+                        r64_rm64(0x3B, tokens[1].Text, tokens[2].Text);
+                    } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
+                        // REX.W + 81 /7 id :: CMP r/m64, imm32(se)
                         // - REX.W
                         Append(Constants.REXW);
                         // - opcode
-                        Append((byte) 0x3B);
-                        // - ModR/M
-                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[1].Text) << 3) + Constants.GetRegisterIdentifier(tokens[2].Text)));
-                    } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
-                        // FIXME
-                        /* // REX.W + 81 /7 id
-                        Append(Constants.REXW);
                         Append((byte) 0x81);
-                        Append((byte) (0b11000000 + Utils.GetRegisterIdentifier(tokens[1].Text)));
-                        Append(int.Parse(tokens[2].Text)); */
-                        throw new NotImplementedException();
+                        // - ModR/M /7
+                        Append((byte) (0b11111000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
+                        // - imm32
+                        Append(int.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
                 } else if(Utils.JccRegex.IsMatch(tokens[0].Text)) {
@@ -191,10 +189,46 @@ namespace IASM {
                     if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
 
                     if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
-                        // REX.W + 33 /r :: XOR 
+                        // REX.W + 33 /r :: XOR r64, r/m64
+                        r64_rm64(0x33, tokens[1].Text, tokens[2].Text);
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "add") {
+                    if(tokens.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
+                    
+                    if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
+                        // REX.W + 03 /r :: ADD r64, r/m64
+                        r64_rm64(0x03, tokens[1].Text, tokens[2].Text);
+                    } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
+                        // REX.W + 81 /0 id :: ADD r/m64, imm32(se)
+                        // - REX.W
                         Append(Constants.REXW);
-                        Append((byte) 0x33);
-                        Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(tokens[1].Text) << 3) + Constants.GetRegisterIdentifier(tokens[2].Text)));
+                        // - opcode
+                        Append((byte) 0x81);
+                        // - ModR/M /0
+                        Append((byte) (0b11000000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
+                        // - imm32
+                        Append(int.Parse(tokens[2].Text));
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "sub") {
+                    if(tokens.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
+                    
+                    if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
+                        // REX.W + 2B /r :: ADD r64, r/m64
+                        r64_rm64(0x2B, tokens[1].Text, tokens[2].Text);
+                    } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
+                        // REX.W + 81 /0 id :: ADD r/m64, imm32(se)
+                        // - REX.W
+                        Append(Constants.REXW);
+                        // - opcode
+                        Append((byte) 0x81);
+                        // - ModR/M /5
+                        Append((byte) (0b11101000 + Constants.GetRegisterIdentifier(tokens[1].Text)));
+                        // - imm32
+                        Append(int.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
 
                 } else throw new NotImplementedException();
