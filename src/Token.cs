@@ -19,7 +19,7 @@ namespace IASM {
         public Position Position { get; }
 
         public override string ToString() {
-            return "'" + Text + "' at " + Position;
+            return "'" + Text + "' (" + (TokenType == TokenType.Text ? "TEXT" : (TokenType == TokenType.Register ? "REG" : (TokenType == TokenType.Number ? "NUM" : "INVALID"))) + ") at " + Position;
         }
 
     }
