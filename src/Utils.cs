@@ -28,7 +28,7 @@ namespace IASM {
 
     static class Utils {
 
-        public static readonly Regex numberRegex = new Regex("^[0-9]+$", RegexOptions.Compiled);
+        public static readonly Regex numberRegex = new Regex("^-?[0-9]+$", RegexOptions.Compiled);
         public static readonly Regex registerRegex = new Regex("^([re][abcd]x|[abcd][xhb]|[re](bp|sp|si|di))$", RegexOptions.Compiled); // TODO: improve to contain actually every register
 
         public static readonly Regex JccRegex = new Regex("^(jn?([abglczsop]|[abgl]?e)|jp[eo]?)$", RegexOptions.Compiled);
