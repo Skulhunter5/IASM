@@ -48,7 +48,7 @@ namespace IASM {
             return ccOffset;
         }
 
-        public static int GetRegisterIdentifier(string text) {
+        public static int GetRegisterCode(string text) {
             if(text.Contains("bp")) return 0b101;
             else if(text.Contains("sp")) return 0b100;
             else if(text.Contains("si")) return 0b110;

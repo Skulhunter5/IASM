@@ -108,13 +108,13 @@ namespace IASM {
         private void r64_rm64(byte opcode, string regA, string regB) { // TODO: check if it is always encoded like this or if I have to create the functions through how they are actually done (likely)
             Append(Constants.REXW);
             Append(opcode);
-            Append((byte) (0b11000000 + (Constants.GetRegisterIdentifier(regA) << 3) + Constants.GetRegisterIdentifier(regB)));
+            Append((byte) (0b11000000 + (Constants.GetRegisterCode(regA) << 3) + Constants.GetRegisterCode(regB)));
         }
 
         private void r64_imm32SE__digit(byte opcode, byte digit, string reg, int imm32) {
             Append(Constants.REXW);
             Append(opcode);
-            Append((byte) (0b11000000 + (digit << 3) + Constants.GetRegisterIdentifier(reg)));
+            Append((byte) (0b11000000 + (digit << 3) + Constants.GetRegisterCode(reg)));
             Append(imm32);
         }
 
@@ -143,7 +143,7 @@ namespace IASM {
                         // - REX.W
                         Append(Constants.REXW);
                         // - opcode+rd
-                        Append((byte) (0xB8 + Constants.GetRegisterIdentifier(tokens[1].Text)));
+                        Append((byte) (0xB8 + Constants.GetRegisterCode(tokens[1].Text)));
                         // - imm64
                         Append(ulong.Parse(tokens[2].Text));
                     } else throw new NotImplementedException();
@@ -215,6 +215,28 @@ namespace IASM {
                     } else if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Number) {
                         // REX.W + 81 /0 id :: ADD r/m64, imm32(se)
                         r64_imm32SE__digit(0x81, 0b101, tokens[1].Text, int.Parse(tokens[2].Text));
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "push") {
+                    if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
+
+                    if(tokens[1].TokenType == TokenType.Register) {
+                        // 50+rd
+                        Append((byte) (0x50 + Constants.GetRegisterCode(tokens[1].Text)));
+                    } else if(tokens[1].TokenType == TokenType.Number) {
+                        // 68 id
+                        Append((byte) 0x68);
+                        Append(int.Parse(tokens[1].Text));
+                    } else throw new NotImplementedException();
+
+                } else if(tokens[0].Text == "pop") {
+                    if(tokens.Length < 2) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 2) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[2]));
+
+                    if(tokens[1].TokenType == TokenType.Register) {
+                        // 58+rd
+                        Append((byte) (0x58 + Constants.GetRegisterCode(tokens[1].Text)));
                     } else throw new NotImplementedException();
 
                 } else throw new NotImplementedException();
