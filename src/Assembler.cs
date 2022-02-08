@@ -180,15 +180,30 @@ namespace IASM {
 
                     // TODO: add placeholder and decide which jump type (close, near, maybe even far) to use later when the actual distance to jump is known
 
-                    // 0F cc:code cd :: Jcc rel32
-                    // - opcode
-                    Append((byte) 0x0f);
-                    // - cc:code
-                    string cc = tokens[0].Text.Substring(1, tokens[0].Text.Length-1);
-                    Append((byte) (Constants.JccBaseOpcode + Constants.ccOffset(cc)));
-                    // cd :: rel32
-                    fillLabelContracts.Add(new FillLabelContract(_bytes.Count, tokens[1].Text, -_bytes.Count - 4));
-                    Append((int) 0);
+                    if(tokens[1].TokenType == TokenType.Number) {
+                        // 0F 80+cc cd :: Jcc rel32
+                        // - opcode
+                        Append((byte) 0x0f);
+                        // - cc:code
+                        string cc = tokens[0].Text.Substring(1, tokens[0].Text.Length-1);
+                        Append((byte) (Constants.JccBaseOpcode + Constants.ccOffset(cc)));
+                        // cd :: rel32
+                        fillLabelContracts.Add(new FillLabelContract(_bytes.Count, tokens[1].Text, -_bytes.Count - 4));
+                        Append((int) 0);
+                    } throw new NotImplementedException();
+
+                } else if(Utils.CMOVccRegex.IsMatch(tokens[0].Text)) { // TODO: add CMOV r64, imm32
+                    if(tokens.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));
+                    if(tokens.Length > 3) return new AssembleResult(null, 0, 0, 0, new UnexpectedInstructionError(tokens[3]));
+
+                    if(tokens[1].TokenType == TokenType.Register && tokens[2].TokenType == TokenType.Register) {
+                        // REX.W + 0F 40+cc /r :: CMOVcc r64, r/m64
+                        Append(Constants.REXW);
+                        Append((byte) 0x0F);
+                        string cc = tokens[0].Text.Substring(4, tokens[0].Text.Length-4);
+                        Append((byte) (Constants.CMOVccBaseOpcode + Constants.ccOffset(cc)));
+                        Append((byte) (0b11000000 + (Constants.GetRegisterCode(tokens[1].Text) << 3) + Constants.GetRegisterCode(tokens[2].Text)));
+                    } else throw new NotImplementedException();
 
                 } else if(tokens[0].Text == "xor") {
                     if(tokens.Length < 3) return new AssembleResult(null, 0, 0, 0, new ExpectedInstructionError(new Position(_source, i+1, line.Length+1)));

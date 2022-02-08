@@ -32,6 +32,7 @@ namespace IASM {
         public static readonly Regex registerRegex = new Regex("^([re][abcd]x|[abcd][xhb]|[re](bp|sp|si|di))$", RegexOptions.Compiled); // TODO: improve to contain actually every register
 
         public static readonly Regex JccRegex = new Regex("^(jn?([abglczsop]|[abgl]?e)|jp[eo]?)$", RegexOptions.Compiled);
+        public static readonly Regex CMOVccRegex = new Regex("^(cmovn?([abglczsop]|[abgl]?e)|jp[eo]?)$", RegexOptions.Compiled);
 
         public static string[] GetLines(string text) {
             List<string> lines = new List<string>();
